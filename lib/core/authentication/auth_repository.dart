@@ -21,10 +21,10 @@ abstract class AuthRepository {
     required String password,
   });
 
-  /// Authenticates staff members (lecturers and administrators) using their
-  /// provisioned staff identifier (e.g. institutional email or staff ID) and password.
+  /// Authenticates lecturers and provisioned Super Admins using their Firebase
+  /// Authentication email and password.
   Future<AuthUser> signInWithStaffCredentials({
-    required String identifier,
+    required String email,
     required String password,
   });
 

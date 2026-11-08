@@ -2,12 +2,19 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Mission 05 foundation: deny all client access until a reviewed,
-    // collection-specific access matrix and tested rules are approved.
-    // Firebase Authentication alone does not grant Firestore authorization.
-    // Client-provided role fields are never trusted for authorization.
-    // Privileged attendance records and role assignments must be written by
-    // trusted backend code; Admin SDK operations must validate authorization.
+    // Users may retrieve only their own profile. Firebase Authentication alone
+    // does not grant access to any other application data.
+    match /users/{uid} {
+      allow get: if request.auth != null
+        && request.auth.uid == uid
+        && request.auth.token.active == true
+        && request.auth.token.role in ['student', 'lecturer', 'super_admin'];
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // All other collections remain closed until their access matrix is
+    // approved and tested. Client-provided roles are never trusted.
     match /{document=**} {
       allow read, write: if false;
     }

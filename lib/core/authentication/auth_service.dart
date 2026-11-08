@@ -2,6 +2,7 @@ import '../constants/user_role.dart';
 import 'auth_repository.dart';
 import 'auth_state.dart';
 import 'auth_user.dart';
+import 'matric_identity.dart';
 
 /// Application service coordinating authentication workflows and role management.
 ///
@@ -37,10 +38,7 @@ class AuthService {
     required String matricNumber,
     required String password,
   }) async {
-    final sanitizedMatric = matricNumber.trim();
-    if (sanitizedMatric.isEmpty) {
-      throw ArgumentError('Matric number cannot be empty.');
-    }
+    final sanitizedMatric = MatricIdentity.normalize(matricNumber);
     if (password.isEmpty) {
       throw ArgumentError('Password cannot be empty.');
     }
@@ -51,21 +49,21 @@ class AuthService {
     );
   }
 
-  /// Handles lecturer and administrator login using provisioned credentials.
+  /// Handles lecturer and Super Admin login using provisioned email credentials.
   Future<AuthUser> loginStaff({
-    required String identifier,
+    required String email,
     required String password,
   }) async {
-    final sanitizedIdentifier = identifier.trim();
-    if (sanitizedIdentifier.isEmpty) {
-      throw ArgumentError('Identifier cannot be empty.');
+    final sanitizedEmail = email.trim().toLowerCase();
+    if (!sanitizedEmail.contains('@') || sanitizedEmail.contains(' ')) {
+      throw const FormatException('Enter a valid staff email address.');
     }
     if (password.isEmpty) {
       throw ArgumentError('Password cannot be empty.');
     }
 
     return _repository.signInWithStaffCredentials(
-      identifier: sanitizedIdentifier,
+      email: sanitizedEmail,
       password: password,
     );
   }

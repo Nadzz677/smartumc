@@ -1,4 +1,5 @@
 import '../constants/user_role.dart';
+import 'matric_identity.dart';
 
 /// Represents an authenticated user in SmartUMC.
 ///
@@ -30,20 +31,44 @@ class AuthUser {
     this.displayName,
   });
 
-  /// Factory constructor to instantiate an [AuthUser] from backend-verified records.
-  factory AuthUser.fromVerifiedRecord({
+  /// Constructs the app identity only when trusted token claims and the
+  /// server-read profile agree and the account is active.
+  factory AuthUser.fromTrustedSources({
     required String uid,
-    required String roleString,
+    required Map<String, dynamic> claims,
+    required Map<String, dynamic> profile,
     String? email,
-    String? matricNumber,
-    String? displayName,
   }) {
+    final roleValue = claims['role'];
+    if (claims['active'] != true || roleValue is! String) {
+      throw const AuthAuthorizationException();
+    }
+
+    final role = UserRole.tryFromClaim(roleValue);
+    if (role == null || profile['role'] != role.value || profile['status'] != 'active') {
+      throw const AuthAuthorizationException();
+    }
+
+    final matricNumber = profile['matricNumber'];
+    if (role == UserRole.student && matricNumber is! String) {
+      throw const AuthAuthorizationException();
+    }
+
+    String? normalizedMatric;
+    if (role == UserRole.student) {
+      try {
+        normalizedMatric = MatricIdentity.normalize(matricNumber as String);
+      } on FormatException {
+        throw const AuthAuthorizationException();
+      }
+    }
+
     return AuthUser(
       uid: uid,
-      role: UserRole.fromString(roleString),
+      role: role,
       email: email,
-      matricNumber: matricNumber,
-      displayName: displayName,
+      matricNumber: normalizedMatric,
+      displayName: profile['displayName'] is String ? profile['displayName'] as String : null,
     );
   }
 
@@ -60,4 +85,8 @@ class AuthUser {
 
   @override
   String toString() => 'AuthUser(uid: $uid, role: ${role.value})';
+}
+
+class AuthAuthorizationException implements Exception {
+  const AuthAuthorizationException();
 }

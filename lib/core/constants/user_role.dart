@@ -3,7 +3,7 @@
 /// SmartUMC enforces three distinct user roles sharing one codebase:
 /// - [student]: Android mobile application interface.
 /// - [lecturer]: Desktop-first web dashboard for attendance and QR management.
-/// - [admin]: Desktop-first web dashboard for Super Admin university management.
+/// - [superAdmin]: Limited synthetic-data administration interface.
 ///
 /// Security note:
 /// Roles must be verified using trusted backend-controlled data (e.g. Firebase
@@ -12,7 +12,7 @@
 enum UserRole {
   student('student'),
   lecturer('lecturer'),
-  admin('admin');
+  superAdmin('super_admin');
 
   final String value;
 
@@ -28,10 +28,6 @@ enum UserRole {
         return r;
       }
     }
-    // Also accept 'super_admin' or 'superadmin' aliases for the admin role
-    if (normalized == 'super_admin' || normalized == 'superadmin') {
-      return UserRole.admin;
-    }
     throw ArgumentError('Invalid or unsupported user role: $role');
   }
 
@@ -45,7 +41,18 @@ enum UserRole {
     }
   }
 
+  /// Parses a claim without case folding or aliases; claims must use the
+  /// canonical trusted values assigned by the backend.
+  static UserRole? tryFromClaim(Object? value) {
+    if (value is! String) return null;
+    for (final role in UserRole.values) {
+      if (role.value == value) return role;
+    }
+    return null;
+  }
+
   bool get isStudent => this == UserRole.student;
   bool get isLecturer => this == UserRole.lecturer;
-  bool get isAdmin => this == UserRole.admin;
+  bool get isAdmin => this == UserRole.superAdmin;
+  bool get isSuperAdmin => this == UserRole.superAdmin;
 }

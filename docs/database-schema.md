@@ -8,16 +8,17 @@
 - Client-provided roles are untrusted; privileged writes require trusted validation. Passwords must never be stored in Firestore.
 - Attendance requires geolocation verification. Preserve display indicators separately from detailed verification results.
 
-## Code-verified implementation
+## Code-verified implementation before Mission 06
 
 No Firestore collection reads/writes, schema models/repositories, rules, indexes, or seed data were found in the inspected source. Firebase Firestore dependency/configuration exists, but this does not establish a deployed or implemented schema.
 
-### Mission 05 security foundation status
+### Mission 05 and 06 security foundation status
 
-- `firestore.rules` now provides a deny-all client-access baseline. This is intentionally conservative and means authenticated app clients cannot yet read or write Firestore documents.
-- No collection schema, index, seed data, or client access policy has been implemented. The design below remains proposed pending approval.
+- Mission 05 introduced deny-all rules and no application profile schema or client access policy existed at that checkpoint.
+- Mission 06 implements only `users/{uid}`. Provisioning writes `role`, `status`, `email`, `displayName`, optional student `matricNumber`, and `createdAt`/`updatedAt` timestamps. Firebase Auth UID is the document ID.
+- Active users with a supported trusted role claim may `get` only their own profile. Listing and all client profile writes are denied. All other collections remain denied; no indexes, academic seed data, or attendance data are implemented.
 - Trusted backend code will bypass Firestore Rules when using the Admin SDK, so each future privileged operation must validate caller identity, role, ownership, and request data itself.
-- Mission 05.3 verified the current deny-all baseline with the local Firestore Emulator under `demo-smartumc`: an unauthenticated document read was denied as expected. The emulator was shut down after the probe. This does not validate any future collection-specific rules or schema because neither is implemented.
+- Mission 05.3 verified unauthenticated denial against the then-current deny-all rules. Mission 06 verified the final profile rules against Auth and Firestore emulators, including unauthenticated denial, own-profile allow, cross-user denial, and denial of client profile creation, profile updates, and role changes. This does not validate other collections because they remain denied and unimplemented.
 
 ## Proposed design (not an approved schema)
 
@@ -31,7 +32,7 @@ These are logical data needs, not approved Firestore collection names or a final
 
 ## Pending approval
 
-- Exact collection/document structure, field names, retention, and access matrix.
+- Additional collection/document structure, field names, retention, and access matrix beyond the minimal `users/{uid}` profile.
 - Semester identifiers/date boundaries and synthetic course/enrollment dataset.
 - Detailed location-result fields and geofence parameters.
 - Which attendance/session operations are client-readable versus backend-only.

@@ -10,7 +10,10 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "validate": "npm run build",
-    "test:rules": "node scripts/verify-firestore-rules.mjs"
+    "test:rules": "node scripts/verify-firestore-rules.mjs",
+    "test": "npm run build && node --test scripts/authentication.test.cjs",
+    "test:emulator": "npm run build && node --test scripts/auth-emulator.test.cjs",
+    "provision:demo-user": "node scripts/provision-demo-user.cjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",

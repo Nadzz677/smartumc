@@ -23,7 +23,7 @@ class AppRoutes {
         return studentMobile;
       case UserRole.lecturer:
         return lecturerDashboard;
-      case UserRole.admin:
+      case UserRole.superAdmin:
         return adminDashboard;
     }
   }
@@ -55,7 +55,7 @@ class AppRoutes {
       case lecturerDashboard:
         return userRole == UserRole.lecturer;
       case adminDashboard:
-        return userRole == UserRole.admin;
+        return userRole == UserRole.superAdmin;
       default:
         return false;
     }
