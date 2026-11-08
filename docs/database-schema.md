@@ -17,6 +17,7 @@ No Firestore collection reads/writes, schema models/repositories, rules, indexes
 - `firestore.rules` now provides a deny-all client-access baseline. This is intentionally conservative and means authenticated app clients cannot yet read or write Firestore documents.
 - No collection schema, index, seed data, or client access policy has been implemented. The design below remains proposed pending approval.
 - Trusted backend code will bypass Firestore Rules when using the Admin SDK, so each future privileged operation must validate caller identity, role, ownership, and request data itself.
+- Mission 05.3 verified the current deny-all baseline with the local Firestore Emulator under `demo-smartumc`: an unauthenticated document read was denied as expected. The emulator was shut down after the probe. This does not validate any future collection-specific rules or schema because neither is implemented.
 
 ## Proposed design (not an approved schema)
 
