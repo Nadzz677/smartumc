@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Mission 05 foundation: deny all client access until a reviewed,
+    // collection-specific access matrix and tested rules are approved.
+    // Firebase Authentication alone does not grant Firestore authorization.
+    // Client-provided role fields are never trusted for authorization.
+    // Privileged attendance records and role assignments must be written by
+    // trusted backend code; Admin SDK operations must validate authorization.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

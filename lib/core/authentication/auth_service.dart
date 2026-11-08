@@ -1,0 +1,75 @@
+import '../constants/user_role.dart';
+import 'auth_repository.dart';
+import 'auth_state.dart';
+import 'auth_user.dart';
+
+/// Application service coordinating authentication workflows and role management.
+///
+/// Communicates through [AuthRepository] to enforce separation of concerns,
+/// ensuring feature UI layers interact exclusively with a clean application-level API.
+class AuthService {
+  final AuthRepository _repository;
+
+  AuthService({required AuthRepository repository}) : _repository = repository;
+
+  /// Stream of authentication state transitions.
+  Stream<AuthState> get authStateChanges => _repository.authStateChanges;
+
+  /// Retrieves the currently authenticated [AuthUser], if any.
+  Future<AuthUser?> getCurrentUser() => _repository.getCurrentUser();
+
+  /// Verifies whether an active authenticated session exists.
+  Future<bool> isAuthenticated() async {
+    final user = await _repository.getCurrentUser();
+    return user != null;
+  }
+
+  /// Retrieves the role assigned to the active user session.
+  Future<UserRole?> getCurrentUserRole() async {
+    final user = await _repository.getCurrentUser();
+    return user?.role;
+  }
+
+  /// Handles student login using Matric Number and Password.
+  ///
+  /// Preserves the required student matric number authentication contract.
+  Future<AuthUser> loginStudent({
+    required String matricNumber,
+    required String password,
+  }) async {
+    final sanitizedMatric = matricNumber.trim();
+    if (sanitizedMatric.isEmpty) {
+      throw ArgumentError('Matric number cannot be empty.');
+    }
+    if (password.isEmpty) {
+      throw ArgumentError('Password cannot be empty.');
+    }
+
+    return _repository.signInWithMatricNumber(
+      matricNumber: sanitizedMatric,
+      password: password,
+    );
+  }
+
+  /// Handles lecturer and administrator login using provisioned credentials.
+  Future<AuthUser> loginStaff({
+    required String identifier,
+    required String password,
+  }) async {
+    final sanitizedIdentifier = identifier.trim();
+    if (sanitizedIdentifier.isEmpty) {
+      throw ArgumentError('Identifier cannot be empty.');
+    }
+    if (password.isEmpty) {
+      throw ArgumentError('Password cannot be empty.');
+    }
+
+    return _repository.signInWithStaffCredentials(
+      identifier: sanitizedIdentifier,
+      password: password,
+    );
+  }
+
+  /// Terminates the current authenticated session.
+  Future<void> logout() => _repository.signOut();
+}

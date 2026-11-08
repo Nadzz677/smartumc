@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "596792330357",
+    "project_id": "smartumc-2cdc4",
+    "storage_bucket": "smartumc-2cdc4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596792330357:android:620511851c0d663583503c",
+        "android_client_info": {
+          "package_name": "com.example.SmartUMC"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyPKnSAJ3ITupUeeq4qWB2MUl06b4enFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:596792330357:android:f5b8f7612b21af8f83503c",
+        "android_client_info": {
+          "package_name": "com.example.smartumc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAyPKnSAJ3ITupUeeq4qWB2MUl06b4enFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
