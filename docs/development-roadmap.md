@@ -38,10 +38,10 @@ Firebase Core initialization/options, basic authentication abstractions, role co
 3. **Prepare isolated development/test path.** (Environment readiness is verified for Functions and Firestore emulators.) Before implementation, define emulator fixtures and tests for Auth and collection-specific rules. Do not alter production configuration or deploy without explicit approval.
 4. **Authentication foundation (Mission 06 implemented).** Before using production identities, approve the formal matric format and staff verification/provisioning process. Android build alignment is verified; next test role refresh and disabled-account behavior on target clients.
 5. **Create limited synthetic DIT data management.** Extend the trusted local provisioning foundation only after approval of semester/course/enrollment data fields; keep all test data synthetic.
-6. **Implement lecturer sessions and optional QR.** Add session lifecycle and lecturer control; when enabled, issue protected QR tokens with one-minute refresh/expiry. Student check-in consumes an active session.
-7. **Implement student attendance evidence.** For physical sessions, capture location evidence when available and distinguish permission denial, unavailable location, and unreliable readings; do not reject solely for GPS limitations. Online sessions may omit precise location. Do not introduce a fixed geofence radius initially. Keep evidence separate from submission status and lecturer judgement.
-8. **Implement lecturer attendance review.** Display the three approved indicators and relevant detailed verification outcomes with appropriate access restrictions.
-9. **Verify end-to-end behavior and security.** Test Android and web flows, rules, backend validation, negative cases, QR expiry/replay, and synthetic dataset consistency before any deployment.
+6. **Mission 08 backend implemented:** Callable session lifecycle, static/dynamic QR signing, enrolled student submission, location evidence validation, lecturer roster retrieval, private Firestore attendance collections, and emulator coverage. Student/lecturer UI integration remains future work.
+7. **Next:** Confirm official class occurrence sources, semester dates, and schedule exceptions before treating synthetic template-based occurrence snapshots as official.
+8. **Next:** Integrate backend calls in the Android student and lecturer web experiences only after director review; preserve online/physical indicator semantics and no-GPS denial rules.
+9. **Next:** Resolve location/privacy retention, clock-skew and QR expiry grace policy, and lecturer judgement workflow before production use.
 
 ## Pending approval
 
@@ -110,3 +110,27 @@ Backend runtime/billing, semester dates and official course/offering details, fo
 - **Mission 07.3 waiver:** The project director approved continuing despite
   Node.js 22.23.4 being unavailable. Available Functions checks used Node.js
   24.21.0. Do not claim Node.js 22 compatibility was verified.
+
+## Mission 08 attendance backend status
+
+- **Implemented:** Six callable Functions for session create/open/close, QR
+  issue, attendance submit, and assigned lecturer roster retrieval.
+- **Passed:** Functions TypeScript validation and 17 Functions unit tests on
+  Node.js 24.21.0. Emulator integration passed 3/3 test files across Auth,
+  Firestore rules, academic regression, and attendance callable behavior.
+- **Passed:** Emulator run used the exact `demo-smartumc` project, loopback
+  Auth/Firestore/Functions endpoints, a temporary synthetic local secret
+  override, and JDK 25.0.4 from Android Studio. CLI used host Node.js 24 for
+  Functions despite configured Node.js 22. No deployment or production data
+  was used.
+- **Pending:** Node.js 22 runtime compatibility remains unverified under the
+  approved Mission 07.3 waiver. Official class schedules/dates, clock-skew or
+  expiry grace, location data retention/privacy, and lecturer judgement are
+  unresolved. The lecturer-attested occurrence snapshot is not proof of an
+  official scheduled class.
+- **Not implemented:** Flutter attendance UI, location permission/device
+  capture, bulletin workflows, or production deployment.
+- The Functions Emulator selected host Node.js 24.21.0 because Node.js
+  22.23.4 was unavailable. The test result does not verify Node.js 22 runtime
+  compatibility. No Flutter tests were needed or run because this mission did
+  not change Flutter source.

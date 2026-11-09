@@ -157,3 +157,66 @@ authentication/profile behavior.
 - **Not implemented:** Attendance sessions/records, QR generation/rotation,
   GPS collection/validation, attendance submission, bulletins, Super Admin
   UI, and production provisioning remain outside Mission 07.2.
+
+## Mission 08 attendance schema
+
+### Code-verified implementation
+
+- `attendanceSessions/{sessionId}`: `courseOfferingId`, `semesterId`,
+  `lecturerUid`, `attendanceMode`, `qrMode`, `status`, `occurrence`,
+  `createdAt`, `openedAt`, `closedAt`, and an optional synthetic-data marker.
+  `occurrence` snapshots `classDate`, template weekday/time, venue, group,
+  schedule index, attestation source, and semester-date validation state.
+  QR tokens and signing secrets are not stored here.
+- Session status transitions are `created -> open -> closed`; a `created`
+  session may also be closed as a cancellation. QR issuance and submission
+  require `open`.
+- `attendanceRecords/{sessionId_studentUid}`: session/offering/semester/student
+  references, group, `submissionStatus: submitted`, server `scanAt`, QR mode
+  and token digest, attendance mode, `locationEvidence`, `displayIndicator`,
+  and `lecturerJudgement` (currently `pending`). The deterministic ID and
+  Firestore transaction prevent duplicate submissions without creating
+  missing-scan records.
+- `locationEvidence.status` is one of `captured`, `not_opened`,
+  `permission_denied`, `unavailable`, `unreliable`, or `not_required`.
+  Captured measurements are numeric latitude/longitude, finite non-negative
+  `accuracyMeters`, and `capturedAt` Unix milliseconds. Coordinates and
+  reported reliability are client-provided evidence. No geofence, accuracy
+  threshold, or maximum age is used; future timestamps are rejected.
+- QR payloads contain version, session ID, mode, and (for dynamic QR) a
+  server-derived minute bucket. HMAC-SHA256 signatures are verified by
+  Functions with `ATTENDANCE_QR_SIGNING_SECRET`. Static tokens have no time
+  expiry and cease working when the session is not open; dynamic tokens expire
+  exactly at the end of the 60-second bucket. Duplicate record protection is
+  per student/session, allowing one token to serve multiple eligible students.
+- Rules explicitly deny direct client reads/writes to both attendance
+  collections. Assigned lecturers use a callable roster operation; students
+  submit through a callable and cannot read records directly.
+- Lecturer roster query uses a single equality filter on
+  `courseOfferingId`; status and relationship consistency are checked in
+  backend code. No composite index was added.
+
+### Occurrence limitation
+
+Mission 07 contains only synthetic recurring templates and no official
+semester dates. A lecturer selects a template and actual date; the backend
+checks weekday/template consistency and any existing semester date bounds,
+then stores an attested occurrence snapshot in the session. This avoids
+mistaking a recurrence template itself for an occurrence, but cannot verify
+official scheduling. No `classOccurrences` collection was added. Official
+date bounds, recurrence exceptions, and schedule provenance remain pending.
+
+### Verification
+
+- **Passed:** Functions TypeScript validation and 17/17 Functions unit tests
+  on Node.js 24.21.0 (`C:\Program Files\nodejs\node.exe`). Node.js 22.23.4
+  remains unverified under the approved Mission 07.3 waiver.
+- **Passed:** Auth, Firestore, and Functions Emulator integration (3/3 test
+  files) on `demo-smartumc`; the Functions Emulator loaded all six callables.
+  Attendance tests cover role/activity checks, assigned/unassigned offerings,
+  occurrence/semester validation, lifecycle, QR tampering/expiry/reuse,
+  concurrent duplicate submissions, location variants, online no-GPS,
+  lecturer scoping, and direct read/write denial.
+- Emulator Java was Android Studio JBR 25.0.4. A random test key was passed
+  through an ephemeral ignored secret override and removed after the run.
+  Emulators shut down cleanly; no deployment or production dataset was used.

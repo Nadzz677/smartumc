@@ -25,7 +25,7 @@ Labels distinguish approved scope from inspected implementation and future desig
 - A local provisioning process creates synthetic Firebase Auth accounts, assigns trusted claims, and writes matching `users/{uid}` profiles. It refuses to run unless the Auth and Firestore emulators are local and the project is exactly `demo-smartumc`.
 - Firestore Rules preserve authenticated own-profile `get` on `users/{uid}` and allow scoped academic reads for active trusted users; profile and academic client writes remain denied. Other collections remain denied.
 - Focused Dart and Functions tests cover matric aliasing, role/claim validation, routing/session transitions, provisioning, academic models/seeding, and emulator access rules. See `docs/architecture.md` and `docs/database-schema.md` for executed verification results.
-- Attendance, location verification, dynamic QR, and password recovery remain unimplemented. Password recovery is outside Mission 06 and requires a separate project decision; the `.invalid` alias cannot receive email. Academic data foundation is implemented under Mission 07; full academic UI is not.
+- Attendance backend, location evidence validation, and static/optional dynamic QR are implemented in Mission 08. Student and lecturer UI integration remains outside this mission. Password recovery is outside Mission 06 and requires a separate project decision; the `.invalid` alias cannot receive email. Academic data foundation is implemented under Mission 07; full academic UI is not.
 
 ## Proposed design
 
@@ -58,7 +58,27 @@ Labels distinguish approved scope from inspected implementation and future desig
 - **Confirmed requirement:** Location evidence is presented separately from submission status and lecturer judgement. Coordinates and reported accuracy are evidence, not guaranteed proof of presence.
 - **Confirmed requirement:** Lecturers configure attendance mode. Online attendance can be submitted without precise physical location; location evidence is not mandatory for online sessions.
 - **Confirmed requirement:** Preserve indicators exactly: green = location successfully traced when scanned; yellow = scanned but did not open location; red = did not scan. Detailed evidence and GPS reliability remain separate.
-- **Not implemented:** QR generation/rotation, attendance sessions/records, GPS collection/validation, and attendance submission remain Mission 08 work.
+- **Code-verified implementation:** Attendance backend is implemented in Mission 08; see the implementation section below for boundaries and limitations.
+
+## Mission 08 attendance backend
+
+### Code-verified implementation
+
+- Six trusted callable functions create, open, close, issue QR tokens, submit attendance, and return the assigned lecturer's session roster. Every operation checks Firebase Auth identity, current Auth disabled state, active custom claims, and the matching active profile/role.
+- `attendanceSessions/{sessionId}` stores offering/semester/lecturer references, `attendanceMode` (`physical` or `online`), `qrMode` (`static` or `dynamic`), lifecycle status (`created`, `open`, `closed`), a dated occurrence snapshot, and lifecycle timestamps. Session creation verifies the lecturer's offering assignment and semester document.
+- `attendanceRecords/{sessionId_studentUid}` uses a deterministic ID and transactionally rejects duplicates. Records separate `submissionStatus`, `locationEvidence`, and `lecturerJudgement`. The judgement remains `pending`; no review-update operation is implemented.
+- Static QR tokens are HMAC-SHA256 signed and valid only while their associated session is open. They are reusable by multiple eligible students. Dynamic tokens use server UTC minute buckets and are accepted only within their exact 60-second bucket. No expiry grace or clock-skew tolerance is applied. QR secrets use the `ATTENDANCE_QR_SIGNING_SECRET` Functions secret parameter and are never returned to clients.
+- Physical location outcomes are `captured`, `not_opened`, `permission_denied`, `unavailable`, and `unreliable`. Captured evidence requires latitude, longitude, reported accuracy, and a Unix-millisecond timestamp. The backend checks coordinate ranges, finite/non-negative accuracy, and rejects future timestamps. It sets no accuracy threshold or maximum age and accepts unreliable/unavailable/denied outcomes without rejecting attendance. Evidence is marked client-reported, not proof of physical presence.
+- Online sessions accept submissions without GPS and store `not_required`; they reject submitted precise-location payloads. They do not map missing GPS to a physical indicator.
+- Indicator values preserve the approved meanings: physical `captured` -> green; `not_opened` -> yellow; enrolled students without a record receive derived red only after session closure. Other physical location outcomes map to null with `location_outcome_unmapped`; online submissions map to null with `not_applicable_online`. No fake absence records are written.
+- Lecturer roster retrieval checks current assigned offering ownership and returns only enrolled roster rows, submission/location details, student profile identity fields, and pending judgement. Attendance collections deny all direct client reads and writes; all other collections retain default-deny behavior.
+- Local emulator secrets use ignored `functions/.secret.local`; no production secret was set and no deployment occurred.
+
+### Occurrence limitation and pending approval
+
+- The Mission 07 schedule entries are synthetic recurring-weekly templates and semester dates are null. Session creation therefore takes a lecturer-selected date and template index, validates the template weekday/time/group/venue/lecturer and known semester bounds, and stores an `occurrenceSource: lecturer_attested_schedule_template` snapshot. When semester dates are missing, it records `semesterDateValidation: unavailable`.
+- This ties sessions to a specific dated occurrence but cannot independently prove that an official class was scheduled. Official recurrence rules, semester dates, schedule provenance, location permission wording/retention, location clock-skew policy, QR clock-skew/grace behavior, and lecturer judgement workflow remain unresolved. No new occurrence collection was added.
+- **Verification limitation:** Functions validation and tests ran on Node.js 24.21.0; the configured Node.js 22.23.4 runtime remains unverified under the approved Mission 07.3 waiver.
 
 ## Mission 07 academic data status
 

@@ -76,6 +76,7 @@ firebase-adminsdk-*.json
 functions/node_modules/
 functions/lib/
 functions/.env*
+functions/.secret.local
 functions/*.log
 emulator-data/
 firebase-export/

@@ -49,7 +49,7 @@ Inspect relevant source and configuration before making changes. Never infer imp
 
 ## Database design principles
 
-- Firestore is the primary database. The minimal academic schema (`users`, `semesters`, `courses`, `courseOfferings`, `enrollments`) is implemented; attendance and bulletin workflows remain unimplemented.
+- Firestore is the primary database. The minimal academic schema and backend attendance collections (`attendanceSessions`, `attendanceRecords`) are implemented; bulletin workflows remain unimplemented. Attendance reads/writes go through trusted Cloud Functions; direct client access is denied.
 - Production application data must start empty. Synthetic users and academic records are local emulator/development fixtures only; never automatically seed production.
 - Account creation and academic enrollment are separate trusted operations. A new account receives no enrollment or timetable assignment automatically, and students cannot modify trusted academic records.
 - Start with the smallest schema that supports the approved DIT demonstration workflows.

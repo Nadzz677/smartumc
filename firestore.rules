@@ -57,6 +57,16 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // Attendance is read and written only through trusted callable functions.
+    // Clients cannot discover sessions, inspect records, or bypass validation.
+    match /attendanceSessions/{sessionId} {
+      allow read, write: if false;
+    }
+
+    match /attendanceRecords/{recordId} {
+      allow read, write: if false;
+    }
+
     // All other collections remain closed until their access matrix is
     // approved and tested. Client-provided roles are never trusted.
     match /{document=**} {

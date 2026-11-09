@@ -5,5 +5,11 @@ import { initializeApp } from 'firebase-admin/app';
 // contracts have been reviewed and implemented.
 initializeApp();
 
-// Future exports should be added from the focused modules below:
-// authentication, authorization, academics, and attendance.
+export {
+  closeAttendanceSession,
+  createAttendanceSession,
+  getAttendanceQr,
+  getLecturerSessionAttendance,
+  openAttendanceSession,
+  submitAttendance,
+} from './attendance';

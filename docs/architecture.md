@@ -174,6 +174,58 @@ future work with the above design boundaries.
 - **Not verified:** Node.js 22.23.4 Functions validation. Do not treat the
   Node.js 24 result as runtime-equivalent evidence.
 
+## Mission 08 attendance backend
+
+### Code-verified implementation
+
+- Cloud Functions v2 callable endpoints implement session creation, opening,
+  closure, QR retrieval, student submission, and lecturer roster retrieval.
+  Authorization verifies the callable identity, active trusted claim, current
+  Auth account enabled state/claims, and active matching Firestore profile.
+- Attendance collections are private to trusted backend execution. Firestore
+  rules explicitly deny all client reads/writes to sessions and records.
+- QR tokens use HMAC-SHA256 with a Firebase Functions secret parameter.
+  Static tokens are session-bound and usable until closure; dynamic tokens
+  rotate on the exact UTC 60-second bucket and expire at the bucket boundary.
+  No raw tokens or signing secret are stored in Firestore. Records retain a
+  token digest for audit and use a transactionally deterministic record ID.
+- Physical and online modes are explicit. Location outcomes and input
+  validation are detailed in `requirements.md`; no geofence, accuracy
+  threshold, or maximum location age is applied. Submitted location is
+  client-reported evidence, not proof of presence.
+- The lecturer roster derives red only for enrolled students with no record
+  after session closure. Green and yellow keep their approved definitions;
+  physical outcomes without a corresponding approved indicator and online
+  attendance return no color with an explicit context. No absence records or
+  lecturer judgement UI are created.
+- A session contains a dated occurrence snapshot derived from a selected
+  recurring template. Because Mission 07 has only synthetic weekly templates
+  and null semester dates, the lecturer attests the date; official occurrence
+  verification remains limited pending confirmed schedules and date bounds.
+
+### Runtime and verification limitation
+
+- TypeScript validation and Functions tests use Node.js 24.21.0. The package
+  and Firebase configuration still require Node.js 22; compatibility with
+  Node.js 22.23.4 remains unverified under the Mission 07.3 waiver.
+- Local emulators use a synthetic secret override in ignored
+  `functions/.secret.local`. No production Firebase resources or deployment
+  are used.
+- **Passed:** `npm run validate`; 17/17 Functions unit tests; and 3/3
+  emulator integration test files (authentication/profile regression,
+  academic rules regression, and attendance callable/rules flow). The
+  Functions Emulator also started and loaded all six callables.
+- The available Node executable was
+  `C:\Program Files\nodejs\node.exe` (v24.21.0). Firebase CLI used the
+  Android Studio JBR at
+  `C:\Program Files\Android\Android Studio\jbr\bin\java.exe` (25.0.4).
+- **Not run:** Flutter analyzer/build/widget tests; Mission 08 adds no Flutter
+  source or UI integration.
+- On the first emulator attempt, Firebase CLI tried to resolve the absent
+  secret for the demo project and received HTTP 403. The successful run used
+  a generated ephemeral test secret supplied through ignored
+  `functions/.secret.local`; no production secret was configured.
+
 ### Mission 07.3 verification waiver
 
 - **Project director approved continuing:** Node.js 22.23.4 is unavailable in
