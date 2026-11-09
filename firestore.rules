@@ -2,6 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function authenticatedActiveUser() {
+      return request.auth != null
+        && request.auth.token.active == true
+        && request.auth.token.role in ['student', 'lecturer', 'super_admin'];
+    }
+
     // Users may retrieve only their own profile. Firebase Authentication alone
     // does not grant access to any other application data.
     match /users/{uid} {
@@ -10,6 +16,44 @@ service cloud.firestore {
         && request.auth.token.active == true
         && request.auth.token.role in ['student', 'lecturer', 'super_admin'];
       allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // Catalog records are non-sensitive but visible only to an active,
+    // trusted SmartUMC identity. Client writes remain prohibited.
+    match /semesters/{semesterId} {
+      allow get, list: if authenticatedActiveUser();
+      allow create, update, delete: if false;
+    }
+
+    match /courses/{courseId} {
+      allow get, list: if authenticatedActiveUser();
+      allow create, update, delete: if false;
+    }
+
+    match /enrollments/{enrollmentId} {
+      allow get, list: if authenticatedActiveUser()
+        && request.auth.token.role == 'student'
+        && resource.data.studentUid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /courseOfferings/{offeringId} {
+      allow get: if authenticatedActiveUser()
+        && (
+          (request.auth.token.role == 'lecturer'
+            && resource.data.lecturerUid == request.auth.uid)
+          || (request.auth.token.role == 'student'
+            && exists(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid))
+            && get(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid)).data.studentUid == request.auth.uid
+            && get(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid)).data.courseOfferingId == offeringId
+            && get(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid)).data.semesterId == resource.data.semesterId
+            && get(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid)).data.groupId == resource.data.groupId
+            && get(/databases/$(database)/documents/enrollments/$(offeringId + '_' + request.auth.uid)).data.status == 'enrolled')
+        );
+      allow list: if authenticatedActiveUser()
+        && request.auth.token.role == 'lecturer'
+        && resource.data.lecturerUid == request.auth.uid;
       allow create, update, delete: if false;
     }
 

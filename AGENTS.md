@@ -11,7 +11,7 @@ SmartUMC is a Flutter/Dart FYP demonstration using Firebase Authentication and C
 - Lecturer experience: separate web interface (deployment boundary is pending approval).
 - Super Admin is a limited administrative role for managing synthetic demonstration data, not a mandate for a broad third application.
 - Student sign-in uses matric number and password. Staff identity and role assignment require trusted verification; clients cannot assign or elevate roles.
-- Attendance requires geolocation verification. Lecturer-controlled dynamic QR is optional and, when enabled, refreshes every minute.
+- Attendance evidence is used to minimize fraud and support lecturer review, not to guarantee zero proxy attendance. Physical-class workflows collect location evidence when available; unavailable or unreliable GPS alone must not automatically reject a submission. Online sessions may omit precise location, and the lecturer configures the attendance mode. Dynamic QR remains optional and lecturer-controlled, refreshing every minute when enabled.
 - Preserve the approved display indicators: green means student location was successfully traced; yellow means the student scanned but did not open location; red means the student did not scan. Keep detailed location verification results separate from these indicators.
 - Use the minimum Firestore model justified by approved requirements. Do not adopt the historical 22-collection proposal by default.
 
@@ -49,7 +49,9 @@ Inspect relevant source and configuration before making changes. Never infer imp
 
 ## Database design principles
 
-- Firestore is the primary database, but its schema is not yet implemented/verified in source.
+- Firestore is the primary database. The minimal academic schema (`users`, `semesters`, `courses`, `courseOfferings`, `enrollments`) is implemented; attendance and bulletin workflows remain unimplemented.
+- Production application data must start empty. Synthetic users and academic records are local emulator/development fixtures only; never automatically seed production.
+- Account creation and academic enrollment are separate trusted operations. A new account receives no enrollment or timetable assignment automatically, and students cannot modify trusted academic records.
 - Start with the smallest schema that supports the approved DIT demonstration workflows.
 - Add collections and fields only when tied to an approved requirement; document purpose, ownership, access, and lifecycle.
 - Keep trusted writes in backend operations where authorization or integrity depends on them.

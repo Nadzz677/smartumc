@@ -39,10 +39,74 @@ Firebase Core initialization/options, basic authentication abstractions, role co
 4. **Authentication foundation (Mission 06 implemented).** Before using production identities, approve the formal matric format and staff verification/provisioning process. Android build alignment is verified; next test role refresh and disabled-account behavior on target clients.
 5. **Create limited synthetic DIT data management.** Extend the trusted local provisioning foundation only after approval of semester/course/enrollment data fields; keep all test data synthetic.
 6. **Implement lecturer sessions and optional QR.** Add session lifecycle and lecturer control; when enabled, issue protected QR tokens with one-minute refresh/expiry. Student check-in consumes an active session.
-7. **Implement student attendance and location verification.** Capture location as mandatory input and validate it through trusted logic. Keep detailed verification separate from the approved green/yellow/red indicators.
+7. **Implement student attendance evidence.** For physical sessions, capture location evidence when available and distinguish permission denial, unavailable location, and unreliable readings; do not reject solely for GPS limitations. Online sessions may omit precise location. Do not introduce a fixed geofence radius initially. Keep evidence separate from submission status and lecturer judgement.
 8. **Implement lecturer attendance review.** Display the three approved indicators and relevant detailed verification outcomes with appropriate access restrictions.
 9. **Verify end-to-end behavior and security.** Test Android and web flows, rules, backend validation, negative cases, QR expiry/replay, and synthetic dataset consistency before any deployment.
 
 ## Pending approval
 
-Backend runtime/billing, semester dates and seed dataset, geofence/accuracy thresholds, formal matric format, production staff provisioning, lecturer deployment boundary, and password-recovery policy.
+Backend runtime/billing, semester dates and official course/offering details, formal matric format, production staff provisioning, lecturer deployment boundary, and password-recovery policy.
+
+## Mission 07 — academic data foundation
+
+- **Implemented:** Minimal academic collections, guarded synthetic seeder,
+  read-only Flutter models/repository, and scoped Firestore read rules.
+- **Passed:** Functions TypeScript validation and 10 Functions unit tests.
+- **Passed:** Auth/Firestore Emulator integration verified seed create/retry
+  counts, enrollment uniqueness, student and lecturer read boundaries, client
+  write denial, unauthenticated denial, and preserved own-profile access. The
+  CLI seed smoke test created its 32-document dataset and emulators shut down.
+  Flutter analyzer and all 12 Flutter tests passed; Functions build and all 10
+  Functions unit tests passed.
+- **Next:** Review the final diff and obtain project-director checkpoint
+  approval before progressing to attendance or bulletin work. Do not deploy.
+- **Pending facts:** Semester dates, course codes/credits for Computer
+  Forensic, SULAM and Projek 1, plus official offering, lecturer, group and
+  timetable assignments. Current fixtures remain explicitly synthetic.
+
+### Mission 07 access/query sequence
+
+1. Preserve authentication profile and trusted claims.
+2. Query student enrollments using `studentUid == auth.uid`.
+3. Fetch only the offering IDs referenced by those enrollments.
+4. Read semester and course references by document ID.
+5. Let lecturers query with `lecturerUid == auth.uid`.
+6. Add no composite index unless a later approved query requires one.
+
+## Mission 07.2 production and attendance quality gate
+
+- **Confirmed requirement:** Production begins with empty application data;
+  automatic synthetic seeding is prohibited. Seed scripts remain local
+  emulator/development tools only.
+- **Confirmed requirement:** Super Admin's future trusted workflow creates
+  student accounts and profile data separately from enrollment and timetable
+  assignment. No assignment is automatic. Empty states must be handled
+  gracefully. Super Admin manages academic records and bulletins; the UI and
+  production workflow are not implemented yet.
+- **Confirmed Mission 08 design:** Minimize fraud and support lecturer
+  judgement without claiming zero proxy attendance. A QR scan is evidence,
+  not proof of presence. No initial fixed geofence radius. Physical location
+  evidence is captured when available; online sessions may omit precise
+  location. GPS denial, unavailable location, or poor reliability alone must
+  not auto-reject a submission.
+- Preserve the established indicators and keep detailed location evidence,
+  submission state, GPS reliability, and lecturer judgement separate.
+- Mission 07.2 does not start Mission 08 implementation.
+
+### Mission 07.2 engineering verification
+
+- **Passed:** Functions TypeScript validation and 10 unit tests under
+  Node.js 24.21.0. The required Node.js 22.23.4 runtime was not located, so
+  these checks remain unverified under the configured Functions runtime.
+- **Passed:** Auth/Firestore Emulator suite on `demo-smartumc`, 2/2 tests;
+  local emulators shut down after execution.
+- **Passed:** Flutter analyzer, 21 Flutter tests, and Flutter web build.
+- **Passed:** Android debug assembly using the Gradle wrapper with a
+  process-local Temurin 17 selection. Flutter's normal APK command selected
+  Android Studio JBR 25.0.4 and failed in the project's Kotlin tooling; this
+  environment incompatibility remains unresolved.
+- No dependencies, Firebase configuration, or production services were
+  changed or used for these checks.
+- **Mission 07.3 waiver:** The project director approved continuing despite
+  Node.js 22.23.4 being unavailable. Available Functions checks used Node.js
+  24.21.0. Do not claim Node.js 22 compatibility was verified.

@@ -6,7 +6,7 @@
 - Student Android application, separate lecturer web interface, and a limited Super Admin role for synthetic data.
 - Trusted identity verification and privileged-role assignment; clients may not assign roles.
 - DIT demonstration scope, three representative semesters in 2026/2027, synthetic data only.
-- Attendance requires geolocation verification; lecturer-controlled dynamic QR is optional and refreshes every minute when enabled.
+- Attendance evidence is intended to minimize fraud and support lecturer review, not guarantee zero proxy attendance. QR is optional, lecturer-controlled and refreshes every minute when enabled; a scan is not proof of physical presence.
 - Green/yellow/red display definitions are fixed by the approved requirements; detailed location verification results are separate.
 
 ## Code-verified implementation
@@ -57,12 +57,126 @@
 
 Use a feature-oriented Flutter structure with clear presentation, application/domain, and data boundaries. Keep shared code in the same repository while isolating Android-specific location/camera capabilities from web UI. Use Firebase Auth for identity, Firestore repositories for approved application data, and trusted backend operations for account/role provisioning, session integrity, QR secrets, and attendance writes. Enforce access in Firestore Security Rules and backend validation, not just in the UI.
 
-Keep the Super Admin interface limited to approved synthetic demonstration data operations. Design only the minimal Firestore entities required for users/roles, DIT semesters/courses/offerings/enrollments, attendance sessions, and records; the exact schema remains a proposal pending review. Do not adopt the historical 22-collection design wholesale.
+Keep the Super Admin interface limited to approved synthetic demonstration data operations. The Mission 07 academic schema uses only `users`, `semesters`, `courses`, `courseOfferings`, and `enrollments`; attendance sessions and records remain reserved for later implementation. Do not adopt the historical 22-collection design wholesale.
 
 ## Pending approval
 
 - Whether the lecturer web interface is separately deployed from the Android app using the shared repository, or maintained as a separate project.
 - Specific trusted backend runtime/services and billing constraints.
 - Formal matric-number validation format and production staff identity/provisioning policy.
-- Detailed Firestore schema, including exact collection/document names and access matrix.
-- Location thresholds/result fields, while preserving approved UI indicator semantics.
+- Official semester dates, pending subject details, and official offering/lecturer/group/timetable assignments; current academic fixtures are synthetic and the access matrix is implemented for approved reads.
+- Mission 08 evidence-handling details must follow the confirmed policy below; no initial fixed geofence radius is approved.
+
+## Mission 07 academic data implementation
+
+This section supersedes earlier statements that the academic schema and
+collection access matrix were pending. It does not change authentication.
+
+- **Implemented:** Minimal `semesters`, `courses`, `courseOfferings`, and
+  `enrollments` model/seed support. Existing `users` profiles are reused; no
+  attendance or bulletin collections/workflows were added.
+- **Implemented:** Trusted local seeding composes with the Mission 06
+  synthetic-user helper. The command checks exact emulator project ID and
+  loopback Auth/Firestore endpoints before initializing Admin. Create-only
+  writes accept exact records on retry and reject conflicts instead of
+  overwriting them.
+- **Implemented:** Rules preserve `users/{uid}` own-profile `get`. Active
+  trusted identities can read catalogs; students can query only their own
+  enrollments and get offerings only through the deterministic matching
+  enrollment; lecturers can query only assigned offerings. Clients cannot
+  modify academic data. Other collections remain default-denied.
+- **Implemented:** Flutter models validate academic fields and time formats.
+  `FirebaseAcademicRepository` uses current Auth UID and trusted role claims,
+  reads own enrollments/assigned offerings and referenced records, and returns
+  loading/empty/data/error outcomes. No academic UI changed.
+- **Implemented in Mission 07.2:** Offering mapping rejects an embedded
+  timetable entry whose group or lecturer UID differs from its parent
+  offering. Student retrieval also checks enrollment course, semester, and
+  group relationships before returning an offering. Direct repository tests
+  use injected identity/data-source fakes; Firebase rules queries remain
+  covered by the emulator tests.
+- **Synthetic fixture design:** 3 representative semesters (dates unset), 5
+  DIT course docs (2 supplied references, 3 pending), 12 group offerings,
+  and 12 enrollments. Weekly templates are synthetic, not dated occurrences
+  or official timetables.
+- **Queries/indexes:** Student enrollment ownership query; direct gets for
+  student offerings/catalog records; lecturer assignment query. Optional
+  semester filtering is client-side after authorized reads. Automatic
+  single-field indexes suffice; no index file was added.
+- **Passed:** Functions TypeScript build and 10 Functions unit tests, including
+  dataset shape, deterministic IDs, retry behavior and conflict refusal.
+- **Passed:** Auth/Firestore Emulator integration verified exact seed counts
+  (32 created, then 32 already present), deterministic duplicate prevention,
+  student-owned enrollment/offering access, assigned/unassigned lecturer
+  access, academic client-write denial (including lecturer self-assignment),
+  unauthenticated denial, and existing profile access. The CLI seeder smoke
+  test created 32 records with an ephemeral synthetic password; emulators
+  shut down cleanly.
+- **Passed:** Flutter analyzer (no issues), 12 Flutter tests, Functions
+  TypeScript build and 10 Functions tests. Current shell Node.js was 24.21.0
+  for Functions build/tests although `functions/package.json` still requires
+  Node.js 22. Android Studio JBR OpenJDK 21.0.10 ran emulators. No Functions
+  Emulator, production resources, or deployment were used.
+- **Pending academic facts:** Official dates, pending subject details, and
+  official lecturer/group/timetable assignments.
+
+## Mission 07.2 production data and Mission 08 boundaries
+
+### Confirmed requirement
+
+- Production application data starts empty. Synthetic users and academic
+  records are local development/emulator fixtures only; there is no automatic
+  production seeding. Account creation and academic enrollment remain
+  separate trusted operations. Creating a student account does not create an
+  enrollment or timetable assignment.
+- Super Admin is responsible for future trusted student account/profile
+  creation and management of semesters, offerings, timetable assignments,
+  and university/club bulletins. No Super Admin dashboard or production
+  provisioning workflow was implemented in Mission 07.2.
+- Empty states are intentional. Student clients cannot modify trusted
+  academic data.
+- Attendance aims to minimize fraud, not promise zero proxy attendance. QR
+  scans and location readings are evidence for lecturer review, not proof of
+  physical presence.
+- No fixed geofence radius is planned for the initial attendance workflow.
+  Physical-class evidence can include latitude, longitude, reported accuracy,
+  and timestamp when available. Permission denial, unavailable location, and
+  unreliable readings must be distinguished; GPS limitations alone do not
+  automatically reject submission. Online attendance mode may be submitted
+  without precise location, and the lecturer configures the mode.
+- Preserve indicators exactly: green means location successfully traced
+  when scanned; yellow means scanned but did not open location; red means did
+  not scan. Detailed location evidence remains separate from submission
+  status, GPS reliability, and lecturer judgement.
+
+### Not implemented
+
+Mission 07.2 does not add QR issuance/rotation, attendance sessions or
+records, GPS collection or validation, attendance submission, bulletins, a
+Super Admin dashboard, or production account provisioning. These remain
+future work with the above design boundaries.
+
+### Mission 07.2 verification record
+
+- **Passed:** Functions TypeScript validation and 10 Functions unit tests
+  under Node.js 24.21.0. The package continues to declare Node.js 22; Node.js
+  22.23.4 was not found in the targeted user-scoped runtime locations, so the
+  Functions checks were not repeated under the configured runtime.
+- **Passed:** Auth/Firestore Emulator tests against `demo-smartumc` (2/2),
+  run locally; emulator processes shut down after the tests.
+- **Passed:** Flutter analyzer and 21 Flutter tests.
+- **Passed:** Flutter web build.
+- **Passed:** Android debug assembly through the project Gradle wrapper with
+  an explicit process-local Temurin 17 JDK selection. The ordinary Flutter
+  APK command encountered the installed Android Studio JBR 25.0.4, which the
+  project's current Kotlin tooling cannot parse. No Java or project runtime
+  configuration was changed.
+- **Not verified:** Node.js 22.23.4 Functions validation. Do not treat the
+  Node.js 24 result as runtime-equivalent evidence.
+
+### Mission 07.3 verification waiver
+
+- **Project director approved continuing:** Node.js 22.23.4 is unavailable in
+  the current environment. The available Functions validation and tests used
+  Node.js 24.21.0. Node.js 22 compatibility has not been verified; this is an
+  explicit limitation, not a passing runtime check.
