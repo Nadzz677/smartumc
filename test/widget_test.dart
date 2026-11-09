@@ -19,10 +19,16 @@ class _FakeAuthRepository implements AuthRepository {
   Future<AuthUser?> getCurrentUser() async => user;
 
   @override
-  Future<AuthUser> signInWithMatricNumber({required String matricNumber, required String password}) async => user!;
+  Future<AuthUser> signInWithMatricNumber({
+    required String matricNumber,
+    required String password,
+  }) async => user!;
 
   @override
-  Future<AuthUser> signInWithStaffCredentials({required String email, required String password}) async => user!;
+  Future<AuthUser> signInWithStaffCredentials({
+    required String email,
+    required String password,
+  }) async => user!;
 
   @override
   Future<void> signOut() async {
@@ -32,41 +38,77 @@ class _FakeAuthRepository implements AuthRepository {
 }
 
 void main() {
-  testWidgets('does not show a protected experience until authorization resolves', (tester) async {
-    final repository = _FakeAuthRepository();
-    final service = AuthService(repository: repository);
-    repository.controller.add(const AuthLoading());
+  testWidgets(
+    'does not show a protected experience until authorization resolves',
+    (tester) async {
+      final repository = _FakeAuthRepository();
+      final service = AuthService(repository: repository);
+      repository.controller.add(const AuthLoading());
 
-    await tester.pumpWidget(SmartUMCApp(authService: service));
-    await tester.pump();
-    expect(find.text('Student experience'), findsNothing);
-    expect(find.text('Sign in to continue'), findsNothing);
+      await tester.pumpWidget(SmartUMCApp(authService: service));
+      await tester.pump();
+      expect(find.text('Student experience'), findsNothing);
+      expect(find.text('Log in to access your student portal.'), findsNothing);
 
-    repository.user = const AuthUser(uid: 'synthetic-uid', role: UserRole.student, matricNumber: 'dit2026001');
-    repository.controller.add(Authenticated(repository.user!));
-    await tester.pump();
-    expect(find.text('Student experience'), findsOneWidget);
-    expect(find.text('dit2026001'), findsOneWidget);
+      repository.user = const AuthUser(
+        uid: 'synthetic-uid',
+        role: UserRole.student,
+        matricNumber: 'dit2026001',
+      );
+      repository.controller.add(Authenticated(repository.user!));
+      await tester.pump();
+      expect(find.text('Student experience'), findsOneWidget);
+      expect(find.text('dit2026001'), findsOneWidget);
 
-    await tester.tap(find.text('Log out'));
-    await tester.pump();
-    expect(find.text('Sign in to continue'), findsOneWidget);
-    await repository.controller.close();
-  });
+      await tester.tap(find.text('Log out'));
+      await tester.pump();
+      expect(
+        find.text('Log in to access your student portal.'),
+        findsOneWidget,
+      );
+      await repository.controller.close();
+    },
+  );
 
-  testWidgets('restores lecturer routing only after a trusted state arrives', (tester) async {
+  testWidgets('restores lecturer routing only after a trusted state arrives', (
+    tester,
+  ) async {
     final repository = _FakeAuthRepository();
     final service = AuthService(repository: repository);
     await tester.pumpWidget(SmartUMCApp(authService: service));
     await tester.pump();
     repository.controller.add(const Unauthenticated());
     await tester.pump();
-    expect(find.text('Sign in to continue'), findsOneWidget);
+    expect(find.text('Log in to access your student portal.'), findsOneWidget);
 
-    repository.user = const AuthUser(uid: 'synthetic-lecturer', role: UserRole.lecturer);
+    repository.user = const AuthUser(
+      uid: 'synthetic-lecturer',
+      role: UserRole.lecturer,
+    );
     repository.controller.add(Authenticated(repository.user!));
     await tester.pump();
     expect(find.text('Lecturer experience'), findsOneWidget);
+    await repository.controller.close();
+  });
+
+  testWidgets('does not expose a Super Admin dashboard in Mission 09', (
+    tester,
+  ) async {
+    final repository = _FakeAuthRepository();
+    final service = AuthService(repository: repository);
+    await tester.pumpWidget(SmartUMCApp(authService: service));
+    repository.user = const AuthUser(
+      uid: 'synthetic-admin',
+      role: UserRole.superAdmin,
+    );
+    repository.controller.add(Authenticated(repository.user!));
+    await tester.pump();
+
+    expect(
+      find.text('Super Admin tools are not included in Mission 09.'),
+      findsOneWidget,
+    );
+    expect(find.text('Super Admin experience'), findsNothing);
     await repository.controller.close();
   });
 }

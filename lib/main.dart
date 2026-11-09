@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'core/authentication/auth_service.dart';
 import 'core/authentication/firebase_auth_repository.dart';
+import 'core/design_system/app_theme.dart';
 import 'features/authentication/authentication_gate.dart';
 import 'firebase_options.dart';
 
@@ -20,7 +21,9 @@ Future<void> main() async {
 
   if (_useFirebaseEmulators) {
     if (!kDebugMode) {
-      throw StateError('Firebase Emulators may only be enabled in a debug build.');
+      throw StateError(
+        'Firebase Emulators may only be enabled in a debug build.',
+      );
     }
     final host = kIsWeb || defaultTargetPlatform != TargetPlatform.android
         ? '127.0.0.1'
@@ -47,7 +50,7 @@ class SmartUMCApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SmartUMC',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.green)),
+      theme: AppTheme.light,
       home: AuthenticationGate(authService: authService),
     );
   }

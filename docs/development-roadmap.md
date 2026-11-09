@@ -134,3 +134,42 @@ Backend runtime/billing, semester dates and official course/offering details, fo
   22.23.4 was unavailable. The test result does not verify Node.js 22 runtime
   compatibility. No Flutter tests were needed or run because this mission did
   not change Flutter source.
+
+## Mission 09.1 — shared UI foundation and login
+
+### Code-verified complete
+
+- Shared Flutter theme tokens and reusable card, text-field, and login
+  background components are implemented.
+- Approved Figma student login design is integrated with existing student
+  matric and staff email authentication. Password recovery displays an
+  unavailable message and remains unimplemented.
+- Responsive student and lecturer placeholder shells route only after the
+  existing trusted authentication state resolves. Super Admin dashboard and
+  attendance/bulletin UI remain out of scope.
+- **Passed:** analyzer, 29 Flutter tests, and web build. Login widget tests
+  cover the 393x852 design viewport and a narrow viewport. An automated golden
+  was removed because asynchronous asset loading made it nondeterministic.
+- **Failed:** Android debug APK build under the selected JDK 25.0.4 due to
+  existing Gradle/Kotlin compatibility. No build configuration was changed.
+- `flutter_svg` 2.3.2 was added with project director approval; Firebase SDK
+  versions remain unchanged. Supplied wave SVG filters are unsupported by the
+  SVG renderer; a Flutter blur fallback is applied.
+
+### Next proposed UI work
+
+- Review and approve the login visual baseline, then implement the student
+  shell and initial academic screens by consuming the existing academic
+  repository. Keep unavailable academic progress free of invented grades.
+- Implement lecturer web views after student navigation foundations; connect
+  attendance creation and roster screens to the existing callable Functions.
+- Before Android release builds, use a compatible existing JDK/Gradle setup
+  and rerun Android verification without changing project toolchain versions
+  unless separately approved.
+
+### Pending decisions
+
+- Student password recovery provider and process for `.invalid` aliases.
+- Whether academic progress has any approved source data; do not show invented
+  grades or GPA.
+- Events and notification data sources and lifecycle.

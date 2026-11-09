@@ -122,3 +122,40 @@ Labels distinguish approved scope from inspected implementation and future desig
 - Whether student timetable views should show lecturer names or only assigned
   lecturer identity. This implementation returns lecturer UID and does not
   broaden user-profile reads.
+
+## Mission 09.1 UI foundation and login
+
+### Confirmed requirement
+
+- Use the approved Figma login design for student matric/password access and
+  preserve staff email/password login. Recovery remains unavailable because
+  the student alias domain is `.invalid` and no recovery provider was approved.
+- Keep student Android and lecturer web experiences separate while sharing
+  Flutter design primitives. Do not create a Super Admin application in this
+  mission.
+
+### Code-verified implementation
+
+- The login screen implements student and staff credential modes, validates
+  input, calls the existing authentication service, and reports generic
+  credential errors. The recovery control explains that recovery is
+  unavailable and does not trigger a reset operation.
+- Student and lecturer routing currently lands on responsive placeholder
+  shells. Super Admin sees a scope notice only. No academic or attendance
+  screens were implemented.
+- Shared theme tokens, reusable card/text-field widgets, Figma login artwork,
+  and Inter font assets are present. `flutter_svg` is used for SVG design
+  assets; the supplied wave SVG contains unsupported filter elements and uses
+  Flutter blur as a fallback.
+- **Verification:** Flutter analyzer passed; 29 Flutter tests passed; web
+  build passed. Android debug build failed with JDK 25.0.4 and the existing
+  Gradle/Kotlin toolchain. Login widget tests cover the design and narrow
+  viewports. A golden assertion was removed after asynchronous asset loading
+  made it nondeterministic in the full suite.
+
+### Pending approval / limitation
+
+- Student alias password recovery provider and process remain unapproved.
+- Academic progress must not show synthetic grades or GPA as real outcomes.
+  Events remain empty/presentation-only until a data source and behavior are
+  approved.

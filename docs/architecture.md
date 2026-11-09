@@ -232,3 +232,48 @@ future work with the above design boundaries.
   the current environment. The available Functions validation and tests used
   Node.js 24.21.0. Node.js 22 compatibility has not been verified; this is an
   explicit limitation, not a passing runtime check.
+
+## Mission 09.1 shared UI foundation and authentication presentation
+
+### Code-verified implementation
+
+- `AppTheme`, `AppColors`, `AppSpacing`, and `AppRadii` provide shared Flutter
+  theme and design tokens. Reusable `AppCard` and `AppTextField` widgets are
+  under `lib/core/design_system/`.
+- The login screen follows the approved Figma student layout and keeps the
+  existing `AuthService` as its authentication boundary. Students enter a
+  matric number; staff use provisioned email credentials. Password recovery
+  is visibly unavailable and does not call Firebase reset APIs.
+- `RoleApplicationShell` provides responsive student and lecturer placeholder
+  experiences with logout. Super Admin sees an out-of-scope notice, not an
+  administrative application. Trusted auth and role resolution are unchanged.
+- Local login assets include the Figma artwork and Inter font. `flutter_svg`
+  renders the supplied SVG assets; it reports unsupported `<filter>` elements
+  from the wave artwork. Flutter blur wraps those wave assets as a fallback.
+- **Passed:** Flutter analyzer, 29 Flutter tests, and Flutter web build. Login
+  widget tests cover the 393x852 design viewport and a narrow viewport. An
+  automated golden was attempted but removed because asynchronous asset decode
+  made it nondeterministic in the full suite.
+- **Failed:** Android debug APK build with the selected Android Studio JDK
+  25.0.4 due to existing Gradle/Kotlin toolchain incompatibility. Build
+  configuration was not changed.
+- `flutter_svg` 2.3.2 was added after project director approval. Firebase
+  package versions and backend behavior were not changed. Dependency
+  resolution now records Flutter >=3.41.0 in `pubspec.lock` (local SDK:
+  3.41.7); contributors using an older Flutter SDK cannot resolve this lock.
+
+### Proposed design
+
+- Continue student screens with the shared tokens and reusable components,
+  then implement the separate lecturer web experience on those primitives.
+  UI should consume existing repositories and callables rather than own
+  Firebase access.
+
+### Pending approval / limitations
+
+- Password recovery for the `.invalid` student alias remains undecided; no
+  recovery provider or reset flow is implemented.
+- Academic progress must not show invented grades or GPA. Events remain empty
+  or presentation-only until a backend requirement is approved.
+- Mission 09.1 does not implement attendance or bulletin UI or a Super Admin
+  dashboard. Android build verification remains blocked by the selected JDK.
