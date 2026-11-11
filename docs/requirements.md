@@ -41,6 +41,23 @@ Labels distinguish approved scope from inspected implementation and future desig
 - Production staff identity verification/provisioning process and backend services/billing constraints. Mission 06 establishes only the trusted local synthetic-account process.
 - Student password-recovery channel and policy. Email reset is not implemented and the `.invalid` alias is not a recovery channel.
 
+## Mission 09.2 — student application
+
+### Code-verified implementation
+
+- The trusted authentication gate now routes authorized students into a persistent student shell with Home, Activities, QR, Events, and Profile tabs. Nested screens use an in-memory navigation stack; sign-out remains connected to the existing AuthService.
+- Home and class timetable read only the authenticated student's enrolled offerings through `AcademicRepository`. Weekly templates are labeled as recurring and are not presented as dated occurrences. No scheduled/in-progress status or current class is inferred.
+- Profile displays only available authentication profile values (display name, matric number, email) and explicit unavailable placeholders. No photo, phone, government ID, sponsor, programme, parent, or guardian information is fabricated.
+- Academic progress, official calendar dates, student attendance history, QR camera scanning/location capture, bulletins, saved appearance, notification delivery/preferences, password recovery, and administrator contact details remain unavailable or presentation-only because the corresponding approved data or device/backend capability is not connected.
+- No academic schema, Firestore collection, Firebase configuration, dependency, attendance API, or bulletin API was added for Mission 09.2.
+- **Passed:** Flutter analyzer, 34 Flutter tests, and Flutter web build. Student widget tests cover trusted shell routing, tab navigation, logout, loading/error/empty academic data, recurring schedule filtering, profile unavailable fields, unavailable progress/calendar/attendance/bulletins, QR placeholder, and settings navigation.
+- **Android build limitation:** `flutter build apk --debug --no-pub` failed in Gradle with `25.0.4` even when Temurin 17 was selected for the command process; Flutter/Android tooling continued to select the Android Studio JBR 25.0.4. No Gradle/Kotlin configuration was changed.
+
+### Confirmed design constraints applied
+
+- Supplied screenshot example data is illustrative and is not used as production or synthetic app content. Only emulator repository records can populate academic views.
+- The student attendance-history client endpoint/repository and QR camera/location capture are future integration requirements. The UI does not read attendance collections directly.
+
 ## Mission 07.2 confirmed operational requirements
 
 ### Production data lifecycle

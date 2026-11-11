@@ -2,22 +2,26 @@ import 'package:flutter/material.dart';
 
 import '../authentication/auth_service.dart';
 import '../authentication/auth_user.dart';
+import '../academics/academic_repository.dart';
 import '../constants/user_role.dart';
 import '../design_system/app_colors.dart';
 import '../design_system/app_spacing.dart';
 import '../design_system/widgets/app_card.dart';
+import '../../features/student/student_application.dart';
 
-/// Minimal role destinations mounted only after trusted authentication resolves.
-/// These are navigation shells, not implementations of the future dashboards.
+/// Role destinations mounted only after trusted authentication resolves.
+/// Student screens remain inside the existing trusted role boundary.
 class RoleApplicationShell extends StatelessWidget {
   const RoleApplicationShell({
     required this.user,
     required this.authService,
+    required this.academicRepository,
     super.key,
   });
 
   final AuthUser user;
   final AuthService authService;
+  final AcademicRepository academicRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +32,7 @@ class RoleApplicationShell extends StatelessWidget {
         contentMaxWidth: 480,
         user: user,
         authService: authService,
+        academicRepository: academicRepository,
       ),
       UserRole.lecturer => _ExperienceShell(
         title: 'Lecturer experience',
@@ -35,6 +40,7 @@ class RoleApplicationShell extends StatelessWidget {
         contentMaxWidth: 1120,
         user: user,
         authService: authService,
+        academicRepository: academicRepository,
       ),
       UserRole.superAdmin => _SuperAdminUnavailable(authService: authService),
     };
@@ -48,6 +54,7 @@ class _ExperienceShell extends StatelessWidget {
     required this.contentMaxWidth,
     required this.user,
     required this.authService,
+    required this.academicRepository,
   });
 
   final String title;
@@ -55,9 +62,17 @@ class _ExperienceShell extends StatelessWidget {
   final double contentMaxWidth;
   final AuthUser user;
   final AuthService authService;
+  final AcademicRepository academicRepository;
 
   @override
   Widget build(BuildContext context) {
+    if (user.role == UserRole.student) {
+      return StudentApplication(
+        user: user,
+        authService: authService,
+        academicRepository: academicRepository,
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('SmartUMC'),

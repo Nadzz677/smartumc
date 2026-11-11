@@ -277,3 +277,20 @@ future work with the above design boundaries.
   or presentation-only until a backend requirement is approved.
 - Mission 09.1 does not implement attendance or bulletin UI or a Super Admin
   dashboard. Android build verification remains blocked by the selected JDK.
+
+## Mission 09.2 — student application UI
+
+### Code-verified implementation
+
+- `StudentApplication` is mounted only by the existing trusted role route for `student`; lecturer and Super Admin destinations and trusted auth resolution are unchanged. A shared responsive shell keeps the bottom navigation visible and maintains a small in-memory screen stack for nested pages.
+- Home, Activities, class timetable, profile, academic progress, academic calendar, attendance-history shell, QR scanner shell, Events, Settings, Appearance, Location & Privacy, Security & Password, Help & Support, About, Notifications, and administrator-contact unavailable state are represented in Flutter screens.
+- `FirebaseAcademicRepository` remains the data boundary. The UI uses the current authenticated identity and existing student enrollment-scoped repository methods. No direct Firestore reads were added to widgets.
+- Recurring timetable templates display day/time/group/course/venue, with lecturer identity hidden because the repository has only a lecturer UID. Dated occurrences are not mixed into the weekly template view. Semester date facts are not inferred.
+- Shared design tokens and the supplied Figma export layouts guide visual hierarchy and cyan/navy components. Exported sample GPA, names, events, dates, locations, and contact details are not copied into live screens.
+- No new collections, dependencies, attendance/bulletin integrations, or auth behavior were introduced.
+
+### Verification
+
+- **Passed:** Flutter analyzer; all 34 Flutter tests; Flutter web build.
+- **Failed:** Android debug APK build. The attempt selected Android Studio JBR 25.0.4 and Gradle reported `25.0.4`, even with process-local `JAVA_HOME` set to installed Temurin 17. Android Gradle/Kotlin toolchain configuration remains unchanged.
+- **Not implemented:** Camera QR scanning, device location-permission reading/capture, student attendance-history API/repository, bulletin data, grade/GPA data, official calendar data, notification delivery/storage, and saved appearance preferences.

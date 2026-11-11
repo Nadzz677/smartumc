@@ -220,3 +220,8 @@ date bounds, recurrence exceptions, and schedule provenance remain pending.
 - Emulator Java was Android Studio JBR 25.0.4. A random test key was passed
   through an ephemeral ignored secret override and removed after the run.
   Emulators shut down cleanly; no deployment or production dataset was used.
+# Mission 09.2 UI data boundary
+
+- **Code-verified implementation:** The student UI consumes the existing `AcademicRepository` methods for authenticated student semesters, offerings, and timetable entries. It does not issue Firestore reads itself.
+- **Code-verified implementation:** Mission 09.2 added no collections or fields. Attendance-history UI does not read `attendanceSessions` or `attendanceRecords`; bulletin UI does not read or create bulletin records.
+- **Proposed design:** Student attendance history should be provided through a trusted, student-scoped backend capability before the UI is connected. Bulletin and academic-result data sources require approved requirements and access rules before integration.

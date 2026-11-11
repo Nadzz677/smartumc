@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import 'core/authentication/auth_service.dart';
 import 'core/authentication/firebase_auth_repository.dart';
+import 'core/academics/firebase_academic_repository.dart';
+import 'core/academics/academic_repository.dart';
 import 'core/design_system/app_theme.dart';
 import 'features/authentication/authentication_gate.dart';
 import 'firebase_options.dart';
@@ -38,20 +40,37 @@ Future<void> main() async {
       firestore: FirebaseFirestore.instance,
     ),
   );
-  runApp(SmartUMCApp(authService: authService));
+  final academicRepository = FirebaseAcademicRepository(
+    auth: FirebaseAuth.instance,
+    firestore: FirebaseFirestore.instance,
+  );
+  runApp(
+    SmartUMCApp(
+      authService: authService,
+      academicRepository: academicRepository,
+    ),
+  );
 }
 
 class SmartUMCApp extends StatelessWidget {
-  const SmartUMCApp({required this.authService, super.key});
+  const SmartUMCApp({
+    required this.authService,
+    required this.academicRepository,
+    super.key,
+  });
 
   final AuthService authService;
+  final AcademicRepository academicRepository;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SmartUMC',
       theme: AppTheme.light,
-      home: AuthenticationGate(authService: authService),
+      home: AuthenticationGate(
+        authService: authService,
+        academicRepository: academicRepository,
+      ),
     );
   }
 }
